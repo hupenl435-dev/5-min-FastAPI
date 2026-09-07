@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAPI 完全掌握 - 互動式學習工作坊</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- CodeMirror for code editing -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <style>
+    .CodeMirror {
+      height: 100%;
+      font-family: 'Fira Code', monospace, monospace;
+      font-size: 14px;
+      border-radius: 0.5rem;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased overflow-hidden">
+
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex items-center justify-between z-10">
+    <div class="flex items-center space-x-3">
+      <div class="bg-teal-500 text-slate-900 p-2 rounded-lg font-bold flex items-center justify-center">
+        <i class="fa-solid fa-bolt text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-white flex items-center gap-2">
+          FastAPI 完全掌握互動教學
+          <span class="text-xs bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded border border-teal-500/30">v0.110+ Ready</span>
+        </h1>
+        <p class="text-xs text-slate-400">從零基礎到高效能非同步 API 實戰</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center bg-slate-900 rounded-lg p-1 text-xs">
+        <button id="view-mode-learn" onclick="switchMainView('learn')" class="px-3 py-1.5 rounded-md font-medium bg-teal-600 text-white transition">
+          <i class="fa-solid fa-book-open mr-1"></i> 章節教學
+        </button>
+        <button id="view-mode-docs" onclick="switchMainView('docs')" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-square-poll-vertical mr-1"></i> Swagger UI 互動文件
+        </button>
+        <button id="view-mode-arch" onclick="switchMainView('arch')" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-diagram-project mr-1"></i> 架構與請求生命週期
+        </button>
+      </div>
+      <a href="https://fastapi.tiangolo.com/" target="_blank" class="text-xs text-slate-400 hover:text-teal-400 flex items-center gap-1 transition">
+        官方文件 <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- Left Sidebar: Chapters -->
+    <aside class="w-80 bg-slate-800/50 border-r border-slate-700/80 flex flex-col shrink-0">
+      <div class="p-4 border-b border-slate-700/80">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">課程進度</span>
+          <span id="progress-text" class="text-xs font-bold text-teal-400">0 / 8 完成</span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2">
+          <div id="progress-bar" class="bg-teal-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <nav id="chapter-list" class="flex-1 overflow-y-auto custom-scroll p-3 space-y-1">
+        <!-- Dynamic Chapter Buttons Loaded Here -->
+      </nav>
+    </aside>
+
+    <!-- Center/Right View Areas -->
+    <main class="flex-1 flex overflow-hidden relative">
+
+      <!-- View 1: Learn Mode (Split Code & Interactive Testing) -->
+      <div id="view-learn" class="flex-1 flex w-full">
+        <!-- Middle Column: Explanation & Code Editor -->
+        <div class="w-1/2 border-r border-slate-700 flex flex-col h-full bg-slate-900/60">
+          <div class="p-5 overflow-y-auto custom-scroll border-b border-slate-700/80 bg-slate-900/40 max-h-[45%]">
+            <div class="flex items-center justify-between mb-2">
+              <span id="chap-tag" class="text-xs font-semibold text-teal-400 uppercase tracking-wider">章節 1</span>
+              <button id="mark-complete-btn" onclick="toggleChapterComplete()" class="text-xs px-2.5 py-1 rounded bg-slate-700 hover:bg-teal-600 text-slate-300 hover:text-white transition flex items-center gap-1">
+                <i class="fa-regular fa-circle-check"></i> 標記為已完成
+              </button>
+            </div>
+            <h2 id="chap-title" class="text-2xl font-bold text-white mb-2">載入中...</h2>
+            <div id="chap-desc" class="text-sm text-slate-300 leading-relaxed space-y-2">
+              <!-- Explanation content -->
+            </div>
+            
+            <div id="key-concepts" class="mt-4 p-3 bg-teal-950/40 border border-teal-500/20 rounded-lg">
+              <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wide mb-1 flex items-center gap-1">
+                <i class="fa-solid fa-lightbulb"></i> 本章核心概念
+              </h4>
+              <ul id="chap-points" class="text-xs text-slate-300 list-disc list-inside space-y-1">
+                <!-- Bullet points -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Code Editor Section -->
+          <div class="flex-1 flex flex-col bg-slate-950 overflow-hidden">
+            <div class="bg-slate-800/80 px-4 py-2 border-b border-slate-700 flex justify-between items-center text-xs text-slate-400">
+              <span class="flex items-center gap-2 font-mono text-teal-300">
+                <i class="fa-solid fa-file-code"></i> main.py
+              </span>
+              <div class="flex items-center space-x-2">
+                <button onclick="resetCurrentCode()" class="hover:text-white transition px-2 py-1 rounded bg-slate-700/50">
+                  <i class="fa-solid fa-rotate-left mr-1"></i> 重置範例
+                </button>
+                <button onclick="runCodeSim()" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-3 py-1 rounded shadow flex items-center gap-1 transition">
+                  <i class="fa-solid fa-play text-xs"></i> 部署服務 (模擬)
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 relative overflow-hidden">
+              <textarea id="code-editor"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: API Interactive Tester -->
+        <div class="w-1/2 flex flex-col h-full bg-slate-900">
+          <div class="p-4 bg-slate-800/40 border-b border-slate-700 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-paper-plane text-teal-400"></i> API 測試面板 (Client Simulator)
+            </h3>
+            <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Uvicorn 服務運行中
+            </span>
+          </div>
+
+          <div class="p-5 flex-1 overflow-y-auto custom-scroll space-y-6">
+            <!-- Request Config -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-4">
+              <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">1. 發送 HTTP 請求</div>
+              
+              <div class="flex gap-2">
+                <select id="req-method" class="bg-slate-900 text-teal-400 font-mono text-sm border border-slate-700 rounded-lg px-3 py-2 font-bold focus:outline-none focus:border-teal-500">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+                <div class="flex-1 flex items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-200">
+                  <span class="text-slate-500 mr-1">http://127.0.0.1:8000</span>
+                  <input type="text" id="req-path" value="/" class="bg-transparent border-none focus:outline-none text-white w-full">
+                </div>
+                <button onclick="sendApiRequest()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-5 py-2 rounded-lg transition shadow-lg flex items-center gap-2 shrink-0">
+                  <i class="fa-solid fa-bolt"></i> 發送
+                </button>
+              </div>
+
+              <!-- Dynamic Parameters Input Area -->
+              <div id="req-params-container" class="space-y-3 pt-2">
+                <!-- Headers / Query Params / Body inputs based on active chapter -->
+              </div>
+            </div>
+
+            <!-- Response Display -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col flex-1">
+              <div class="flex justify-between items-center mb-3">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">2. API 回應結果</div>
+                <div id="resp-status" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300">
+                  狀態: 就緒
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-lg font-mono text-sm overflow-x-auto border border-slate-800 text-emerald-400 min-h-[220px] relative">
+                <pre id="resp-body" class="whitespace-pre-wrap">// 點擊「發送」測試 API 請求...</pre>
+              </div>
+            </div>
+
+            <!-- FastAPI Visual Explanation Box -->
+            <div id="execution-insight" class="bg-slate-800/40 border border-slate-700/60 p-4 rounded-xl text-xs space-y-2">
+              <span class="font-bold text-teal-300 flex items-center gap-1">
+                <i class="fa-solid fa-microchip"></i> FastAPI 背後發生了什麼？
+              </span>
+              <p id="insight-text" class="text-slate-400 leading-relaxed">
+                選擇左側章節並點擊發送請求，此處將說明 FastAPI 如何進行類型檢查、Dependency Injection 或自動驗證 JSON 資料結構。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 2: Swagger UI Interactive Spec -->
+      <div id="view-docs" class="hidden flex-1 p-6 bg-slate-900 overflow-y-auto custom-scroll">
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-3">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded text-sm">FASTAPI</span>
+                <h2 class="text-2xl font-bold text-white">Swagger UI - 自動化互動文件</h2>
+              </div>
+              <p class="text-sm text-slate-400 mt-2">FastAPI 根據 Python Type Hints 與 Pydantic Schema 自動為你產生的 OpenAPI (Swagger) 頁面。</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-400 block">預設存取路徑</span>
+              <code class="text-teal-300 font-mono text-sm bg-slate-900 px-2 py-1 rounded border border-slate-700">/docs</code>
+            </div>
+          </div>
+
+          <div id="swagger-mock-container" class="space-y-4">
+            <!-- Dynamic Swagger Cards will be rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: Architecture Diagram -->
+      <div id="view-arch" class="hidden flex-1 p-8 bg-slate-900 overflow-y-auto custom-scroll">
+        <div class="max-w-5xl mx-auto space-y-8">
+          <div>
+            <h2 class="text-2xl font-bold text-white mb-2">FastAPI 底層架構與請求生命週期</h2>
+            <p class="text-slate-400 text-sm">了解 FastAPI 為什麼擁有與 Node.js / Go 媲美的高效能，以及 Starlette 與 Pydantic 在其中的分工。</p>
+          </div>
+
+          <!-- Architecture Component Diagram -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800/80 p-5 rounded-xl border border-teal-500/30 hover:border-teal-500 transition">
+              <div class="text-teal-400 text-2xl mb-3"><i class="fa-solid fa-server"></i></div>
+              <h3 class="font-bold text-white mb-2">1. Uvicorn & ASGI</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Uvicorn 是極快的 ASGI (Asynchronous Server Gateway Interface) 伺服器，負責處理非同步網絡連接 (TCP/HTTP/WebSockets)，是 FastAPI 運行的基石。
+              </p>
+            </div>
+            <div class="bg-slate-800/80 p-5 rounded-xl border border-teal-500/30 hover:border-teal-500 transition">
+              <div class="text-teal-400 text-2xl mb-3"><i class="fa-solid fa-layer-group"></i></div>
+              <h3 class="font-bold text-white mb-2">2. Starlette Web 框架</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                FastAPI 繼承並擴充了 Starlette。Starlette 提供強大的路由 (Routing)、中間件 (Middleware)、WebSockets 以及非同步 async/await 支援。
+              </p>
+            </div>
+            <div class="bg-slate-800/80 p-5 rounded-xl border border-teal-500/30 hover:border-teal-500 transition">
+              <div class="text-teal-400 text-2xl mb-3"><i class="fa-solid fa-shield-halved"></i></div>
+              <h3 class="font-bold text-white mb-2">3. Pydantic 資料驗證</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Pydantic 負責強類型的資料解析與驗證。它能自動把傳入的 JSON 轉為 Python 物件，遇到無效資料時自動拋出 422 錯誤。
+              </p>
+            </div>
+          </div>
+
+          <!-- Request Lifecycle Flow -->
+          <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl">
+            <h3 class="font-bold text-white mb-4 text-base flex items-center gap-2">
+              <i class="fa-solid fa-arrows-split-up-and-left text-teal-400"></i> 單一 Request 的生命週期 (Request Flow)
+            </h3>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center">
+              <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full md:w-1/5">
+                <span class="text-xs text-slate-400">Step 1</span>
+                <div class="font-bold text-teal-300 text-sm">HTTP Request</div>
+                <div class="text-[10px] text-slate-400">Client 發送請求</div>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-500 hidden md:block"></i>
+              <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full md:w-1/5">
+                <span class="text-xs text-slate-400">Step 2</span>
+                <div class="font-bold text-purple-300 text-sm">Middleware</div>
+                <div class="text-[10px] text-slate-400">CORS / 身份認證</div>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-500 hidden md:block"></i>
+              <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full md:w-1/5">
+                <span class="text-xs text-slate-400">Step 3</span>
+                <div class="font-bold text-yellow-300 text-sm">Dependency Injection</div>
+                <div class="text-[10px] text-slate-400">Depends() 注入資料庫/權限</div>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-500 hidden md:block"></i>
+              <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full md:w-1/5">
+                <span class="text-xs text-slate-400">Step 4</span>
+                <div class="font-bold text-emerald-300 text-sm">Pydantic Validation</div>
+                <div class="text-[10px] text-slate-400">檢查資料型態與邏輯</div>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-500 hidden md:block"></i>
+              <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full md:w-1/5">
+                <span class="text-xs text-slate-400">Step 5</span>
+                <div class="font-bold text-blue-300 text-sm">Route Handler</div>
+                <div class="text-[10px] text-slate-400">執行 async def 業務邏輯</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // Chapter Data Store
+    const chapters = [
+      {
+        id: "chap-1",
+        title: "1. FastAPI 簡介與 Hello World",
+        tag: "基礎入門",
+        desc: "FastAPI 是現代化、高效能（基於 Starlette 與 Pydantic）的 Python 構建 API 框架。最顯著的優勢在於：自動生成 Swagger 規範文件、自動轉型與資料驗證、支援非同步 (async/await)。",
+        points: [
+          "使用 `FastAPI()` 建立應用程式實例",
+          "路由裝飾器如 `@app.get('/')` 定義 HTTP 動詞與路徑",
+          "Python 原生 `dict` 會自動轉為 JSON 回應"
+        ],
+        code: `from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get("/")\ndef read_root():\n    return {"message": "歡迎來到 FastAPI 學習之旅！", "status": "success"}`,
+        defaultReq: { method: "GET", path: "/", body: "", query: "" },
+        mockResponses: {
+          "GET /": { status: 200, body: { message: "歡迎來到 FastAPI 學習之旅！", status: "success" }, insight: "FastAPI 接收到 GET 請求後，調用 read_root()，將 Python dict 自動序列化為 JSON 回傳。" }
+        }
+      },
+      {
+        id: "chap-2",
+        title: "2. 路徑參數 (Path Parameters)",
+        tag: "路由設計",
+        desc: "如何在 URL 中帶入動態變數（例如用戶 ID 或商品 ID）？Python 的 Type Hints 可以在此處發揮強大效果，FastAPI 會自動進行型態轉換。",
+        points: [
+          "在路徑中使用 `{item_id}` 語法",
+          "在函式參數加上型態標註，例如 `item_id: int`",
+          "若傳入非整數（如字符串 'abc'），FastAPI 會自動攔截並回傳 422 Validation Error"
+        ],
+        code: `from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get("/items/{item_id}")\ndef read_item(item_id: int):\n    return {"item_id": item_id, "name": f"商品 #{item_id}", "in_stock": True}`,
+        defaultReq: { method: "GET", path: "/items/42", body: "", query: "" },
+        mockResponses: {
+          "GET /items/42": { status: 200, body: { item_id: 42, name: "商品 #42", in_stock: true }, insight: "路徑中的 '42' (字串) 自動被 FastAPI 轉為 Python 整數 `42`。" },
+          "GET /items/abc": { status: 422, body: { detail: [{ loc: ["path", "item_id"], msg: "value is not a valid integer", type: "type_error.integer" }] }, insight: "422 Unprocessable Entity! Pydantic 自動攔截了型態錯誤，無需手動寫 `if not isinstance`。" }
+        }
+      },
+      {
+        id: "chap-3",
+        title: "3. 查詢參數 (Query Parameters)",
+        tag: "路由設計",
+        desc: "凡是沒有出現在路徑 `path` 中的函式參數，FastAPI 都會自動將其解析為 URL 後方的 Query String（例如 `?skip=0&limit=10`）。",
+        points: [
+          "設定預設值：`skip: int = 0` 使參數變成可選 (Optional)",
+          "搭配 Python `Optional[str] = None` 定義非必填選項",
+          "自動將 URL 中的 'true'/'false' 轉為 Python Boolean"
+        ],
+        code: `from fastapi import FastAPI\nfrom typing import Optional\n\napp = FastAPI()\n\n@app.get("/users")\ndef get_users(skip: int = 0, limit: int = 10, search: Optional[str] = None):\n    return {\n        "page_info": {"skip": skip, "limit": limit},\n        "search_keyword": search,\n        "results": [f"User_{i}" for i in range(skip, skip + limit)]\n    }`,
+        defaultReq: { method: "GET", path: "/users?skip=0&limit=3&search=alex", body: "", query: "skip=0&limit=3&search=alex" },
+        mockResponses: {
+          "GET /users?skip=0&limit=3&search=alex": { 
+            status: 200, 
+            body: { page_info: { skip: 0, limit: 3 }, search_keyword: "alex", results: ["User_0", "User_1", "User_2"] },
+            insight: "FastAPI 自動提取 URL 查詢參數並進行轉型。未傳入的參數會套用預設值。" 
+          }
+        }
+      },
+      {
+        id: "chap-4",
+        title: "4. Pydantic 與 Request Body",
+        tag: "資料模型",
+        desc: "當客戶端發送 POST / PUT 請求時，我們需要驗證 JSON Body 的結構與型態。FastAPI 與 Pydantic 無縫集成，提供無與倫比的型態安全。",
+        points: [
+          "繼承 `pydantic.BaseModel` 定義資料架構",
+          "欄位驗證：支援數字範圍 (`Field(gt=0)`)、Email 格式等",
+          "API 參數設定模型型態：`def create_item(item: Item):`"
+        ],
+        code: `from fastapi import FastAPI\nfrom pydantic import BaseModel, Field\nfrom typing import Optional\n\nclass Product(BaseModel):\n    name: str\n    price: float = Field(..., gt=0, description="價格必須大於 0")\n    description: Optional[str] = None\n\napp = FastAPI()\n\n@app.post("/products")\ndef create_product(product: Product):\n    # 這裡 product 已經是完整轉型且驗證過的 Product 物件\n    tax_price = product.price * 1.05\n    return {"status": "created", "data": product, "price_with_tax": round(tax_price, 2)}`,
+        defaultReq: { method: "POST", path: "/products", body: JSON.stringify({ name: "MacBook Pro", price: 1999.9, description: "M3 Max 晶片" }, null, 2), query: "" },
+        mockResponses: {
+          "POST /products": { 
+            status: 200, 
+            body: { status: "created", data: { name: "MacBook Pro", price: 1999.9, description: "M3 Max 晶片" }, price_with_tax: 2099.9 },
+            insight: "JSON 被 Pydantic 驗證並解析為 Product 物件。可直接以點號 `.price` 讀取屬性。" 
+          }
+        }
+      },
+      {
+        id: "chap-5",
+        title: "5. 依賴注入 (Dependency Injection)",
+        tag: "高級架構",
+        desc: "Dependency Injection (DI) 是 FastAPI 最強大的功能之一！它讓你能輕鬆實現程式碼複用、權限檢查、資料庫 Session 管理與模組解耦。",
+        points: [
+          "使用 `Depends()` 宣告依賴關係",
+          "自動執行依賴函式，並將回傳結果傳入 Route Handler",
+          "非常適合用於用戶認證 (Auth Token) 與 DB 連線"
+        ],
+        code: `from fastapi import FastAPI, Depends, HTTPException, Header\n\ndef verify_token(x_token: str = Header(...)):\n    if x_token != "secret-token":\n        raise HTTPException(status_code=400, detail="無效的 X-Token")\n    return {"user_id": 9527, "role": "admin"}\n\napp = FastAPI()\n\n@app.get("/admin/dashboard")\ndef get_dashboard(current_user: dict = Depends(verify_token)):\n    return {"message": "歡迎進入儀表板", "user": current_user}`,
+        defaultReq: { method: "GET", path: "/admin/dashboard", body: "", headers: { "X-Token": "secret-token" } },
+        mockResponses: {
+          "GET /admin/dashboard": {
+            status: 200,
+            body: { message: "歡迎進入儀表板", user: { user_id: 9527, role: "admin" } },
+            insight: "FastAPI 先調用了 `verify_token` 檢查 Header，確認無誤後將其回傳值自動注入給 `get_dashboard` 的 `current_user` 參數。"
+          }
+        }
+      },
+      {
+        id: "chap-6",
+        title: "6. JWT 身份認證與安全 (OAuth2)",
+        tag: "安全性",
+        desc: "現代 Web API 通常使用 OAuth2 + JWT (JSON Web Tokens) 進行無狀態 (Stateless) 的使用者身份認證。",
+        points: [
+          "使用 `OAuth2PasswordBearer` 定義 Token 取得路徑",
+          "利用 `PyJWT` 或 `python-jose` 加密與解密 JWT",
+          "受保護的 API 路由透過 `Depends` 獲取當前登入者"
+        ],
+        code: `from fastapi import FastAPI, Depends, HTTPException, status\nfrom fastapi.security import OAuth2PasswordBearer\n\noauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")\napp = FastAPI()\n\nasync def get_current_user(token: str = Depends(oauth2_scheme)):\n    if token != "valid_jwt_token":\n        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token 已過期或無效")\n    return {"username": "alex_dev", "email": "alex@example.com"}\n\n@app.get("/users/me")\nasync def read_users_me(current_user: dict = Depends(get_current_user)):\n    return current_user`,
+        defaultReq: { method: "GET", path: "/users/me", headers: { "Authorization": "Bearer valid_jwt_token" } },
+        mockResponses: {
+          "GET /users/me": {
+            status: 200,
+            body: { username: "alex_dev", email: "alex@example.com" },
+            insight: "FastAPI 自動解析 Authorization Header 中的 Bearer Token，並交由認證邏輯處理。"
+          }
+        }
+      },
+      {
+        id: "chap-7",
+        title: "7. 非同步處理 (Async / Await)",
+        tag: "高效能",
+        desc: "FastAPI 底層基於 asyncio。使用 `async def` 可以讓你的 API 在等待 I/O 密集型操作（如資料庫查詢、外部 API 請求）時不阻塞線程。",
+        points: [
+          "I/O 密集型任務（資料庫、網路請求）推薦使用 `async def`",
+          "CPU 密集型任務（圖像處理、機器學習）使用一般 `def`（FastAPI 會自動交給 ThreadPool 處理）",
+          "搭配 `httpx` 或 `asyncpg` 實現全鏈條非同步"
+        ],
+        code: `from fastapi import FastAPI\nimport asyncio\n\napp = FastAPI()\n\nasync def fetch_remote_data():\n    # 模擬非同步 I/O 等待 (如 HTTP 請求或 DB 查詢)\n    await asyncio.sleep(0.1)\n    return {"db_result": "資料查詢完成"}\n\n@app.get("/async-data")\nasync def get_async_data():\n    data = await fetch_remote_data()\n    return {"status": "success", "payload": data}`,
+        defaultReq: { method: "GET", path: "/async-data" },
+        mockResponses: {
+          "GET /async-data": {
+            status: 200,
+            body: { status: "success", payload: { db_result: "資料查詢完成" } },
+            insight: "採用 `async/await` 時，伺服器可在等待 I/O 的期間繼續處理其他使用者的請求，發揮極高吞吐量！"
+          }
+        }
+      },
+      {
+        id: "chap-8",
+        title: "8. WebSockets 即時雙向通訊",
+        tag: "進階應用",
+        desc: "除了 HTTP 之外，FastAPI 原生支援 WebSockets，讓你輕鬆打造即時聊天室、通知系統或即時數據看板。",
+        points: [
+          "使用 `@app.websocket('/ws')` 定義 WebSocket 端點",
+          "`await websocket.accept()` 建立連線",
+          "使用 `await websocket.receive_text()` 與 `send_text()` 進行雙向訊息傳遞"
+        ],
+        code: `from fastapi import FastAPI, WebSocket, WebSocketDisconnect\n\napp = FastAPI()\n\n@app.websocket("/ws")\nasync def websocket_endpoint(websocket: WebSocket):\n    await websocket.accept()\n    try:\n        while True:\n            data = await websocket.receive_text()\n            await websocket.send_text(f"伺服器收到即時訊息: {data}")\n    except WebSocketDisconnect:\n        print("客戶端已斷開連線")`,
+        defaultReq: { method: "GET", path: "/ws", body: "Hello FastAPI WebSocket!" },
+        mockResponses: {
+          "GET /ws": {
+            status: 101,
+            body: { message: "Switched Protocols to WebSocket", connection: "Upgrade", echoed: "伺服器收到即時訊息: Hello FastAPI WebSocket!" },
+            insight: "HTTP 成功 Upgrade 為 WebSocket 雙向持續性連線！"
+          }
+        }
+      }
+    ];
+
+    // State
+    let currentChapterIndex = 0;
+    let completedChapters = new Set();
+    let editor = null;
+
+    // Initialize App
+    window.onload = function() {
+      // Initialize CodeMirror
+      editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+        mode: "python",
+        theme: "dracula",
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        lineWrapping: true
+      });
+
+      renderChapterList();
+      loadChapter(0);
+    };
+
+    // Render Chapters Sidebar
+    function renderChapterList() {
+      const listEl = document.getElementById("chapter-list");
+      listEl.innerHTML = "";
+
+      chapters.forEach((chap, idx) => {
+        const isCompleted = completedChapters.has(chap.id);
+        const isActive = idx === currentChapterIndex;
+
+        const btn = document.createElement("button");
+        btn.onclick = () => loadChapter(idx);
+        btn.className = `w-full text-left p-3 rounded-lg transition mb-1 flex items-center justify-between ${
+          isActive 
+            ? "bg-teal-600/20 border border-teal-500/50 text-white" 
+            : "hover:bg-slate-800 text-slate-300"
+        }`;
+
+        btn.innerHTML = `
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <span class="${isCompleted ? 'text-teal-400' : 'text-slate-600'} text-sm">
+              <i class="${isCompleted ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
+            </span>
+            <div class="truncate">
+              <div class="text-xs font-semibold ${isActive ? 'text-teal-300' : 'text-slate-200'} truncate">${chap.title}</div>
+              <span class="text-[10px] text-slate-400 font-mono">${chap.tag}</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-600"></i>
+        `;
+        listEl.appendChild(btn);
+      });
+
+      // Update progress bar
+      const progress = Math.round((completedChapters.size / chapters.length) * 100);
+      document.getElementById("progress-bar").style.width = `${progress}%`;
+      document.getElementById("progress-text").innerText = `${completedChapters.size} / ${chapters.length} 完成`;
+    }
+
+    // Load Specific Chapter
+    function loadChapter(index) {
+      currentChapterIndex = index;
+      const chap = chapters[index];
+
+      document.getElementById("chap-tag").innerText = chap.tag;
+      document.getElementById("chap-title").innerText = chap.title;
+      document.getElementById("chap-desc").innerText = chap.desc;
+
+      // Render points
+      const pointsEl = document.getElementById("chap-points");
+      pointsEl.innerHTML = chap.points.map(p => `<li>${p}</li>`).join("");
+
+      // Mark Complete button status
+      const btn = document.getElementById("mark-complete-btn");
+      if (completedChapters.has(chap.id)) {
+        btn.className = "text-xs px-2.5 py-1 rounded bg-teal-600/30 text-teal-300 border border-teal-500/40 flex items-center gap-1";
+        btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> 已完成`;
+      } else {
+        btn.className = "text-xs px-2.5 py-1 rounded bg-slate-700 hover:bg-teal-600 text-slate-300 hover:text-white transition flex items-center gap-1";
+        btn.innerHTML = `<i class="fa-regular fa-circle"></i> 標記為已完成`;
+      }
+
+      // Update Code Mirror
+      editor.setValue(chap.code);
+
+      // Setup Request tester defaults
+      document.getElementById("req-method").value = chap.defaultReq.method || "GET";
+      document.getElementById("req-path").value = chap.defaultReq.path || "/";
+
+      // Clear response area
+      document.getElementById("resp-status").innerText = "狀態: 就緒";
+      document.getElementById("resp-status").className = "text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300";
+      document.getElementById("resp-body").innerText = "// 點擊「發送」測試 API 請求...";
+      document.getElementById("insight-text").innerText = "選擇左側章節並點擊發送請求，此處將說明 FastAPI 如何進行類型檢查、Dependency Injection 或自動驗證 JSON 資料結構。";
+
+      renderChapterList();
+      renderMockSwagger();
+    }
+
+    // Reset current code block
+    function resetCurrentCode() {
+      editor.setValue(chapters[currentChapterIndex].code);
+    }
+
+    // Run Simulator Code
+    function runCodeSim() {
+      const notification = document.createElement("div");
+      notification.className = "fixed bottom-4 right-4 bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded-lg shadow-xl z-50 text-sm flex items-center gap-2 animate-bounce";
+      notification.innerHTML = `<i class="fa-solid fa-check"></i> FastAPI 服務已在模擬虛擬環境中成功重載 (Uvicorn Reloaded)`;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 2500);
+    }
+
+    // Simulate API Request Execution
+    function sendApiRequest() {
+      const method = document.getElementById("req-method").value;
+      const path = document.getElementById("req-path").value;
+      const key = `${method} ${path}`;
+
+      const chap = chapters[currentChapterIndex];
+      const mock = chap.mockResponses[key] || {
+        status: 200,
+        body: { status: "success", route: path, method: method, note: "動態回應模擬成功！" },
+        insight: `FastAPI 成功匹配路由 [${method}] ${path} 並回傳 JSON。`
+      };
+
+      const statusEl = document.getElementById("resp-status");
+      statusEl.innerText = `HTTP ${mock.status} ${mock.status === 200 ? 'OK' : mock.status === 422 ? 'Unprocessable Entity' : 'Response'}`;
+      
+      if (mock.status === 200 || mock.status === 101) {
+        statusEl.className = "text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      } else {
+        statusEl.className = "text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30";
+      }
+
+      document.getElementById("resp-body").innerText = JSON.stringify(mock.body, null, 2);
+      document.getElementById("insight-text").innerText = mock.insight;
+    }
+
+    // Toggle Chapter Completion
+    function toggleChapterComplete() {
+      const chap = chapters[currentChapterIndex];
+      if (completedChapters.has(chap.id)) {
+        completedChapters.delete(chap.id);
+      } else {
+        completedChapters.add(chap.id);
+      }
+      loadChapter(currentChapterIndex);
+    }
+
+    // Switch Views (Learn / Swagger Docs / Architecture)
+    function switchMainView(viewName) {
+      document.getElementById("view-learn").classList.add("hidden");
+      document.getElementById("view-docs").classList.add("hidden");
+      document.getElementById("view-arch").classList.add("hidden");
+
+      document.getElementById("view-mode-learn").className = "px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition";
+      document.getElementById("view-mode-docs").className = "px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition";
+      document.getElementById("view-mode-arch").className = "px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition";
+
+      if (viewName === 'learn') {
+        document.getElementById("view-learn").classList.remove("hidden");
+        document.getElementById("view-mode-learn").className = "px-3 py-1.5 rounded-md font-medium bg-teal-600 text-white transition";
+      } else if (viewName === 'docs') {
+        document.getElementById("view-docs").classList.remove("hidden");
+        document.getElementById("view-mode-docs").className = "px-3 py-1.5 rounded-md font-medium bg-teal-600 text-white transition";
+      } else if (viewName === 'arch') {
+        document.getElementById("view-arch").classList.remove("hidden");
+        document.getElementById("view-mode-arch").className = "px-3 py-1.5 rounded-md font-medium bg-teal-600 text-white transition";
+      }
+    }
+
+    // Render Dynamic Interactive Swagger Mock
+    function renderMockSwagger() {
+      const container = document.getElementById("swagger-mock-container");
+      container.innerHTML = "";
+
+      chapters.forEach((c) => {
+        const req = c.defaultReq;
+        const methodColor = req.method === "GET" ? "bg-blue-600" : req.method === "POST" ? "bg-emerald-600" : "bg-amber-600";
+        
+        const card = document.createElement("div");
+        card.className = "bg-slate-800 rounded-lg border border-slate-700 overflow-hidden";
+        card.innerHTML = `
+          <div class="p-3 bg-slate-800/80 flex items-center justify-between cursor-pointer hover:bg-slate-700/50 transition">
+            <div class="flex items-center space-x-3">
+              <span class="${methodColor} text-white text-xs font-bold px-2 py-1 rounded font-mono uppercase">${req.method}</span>
+              <span class="font-mono text-sm text-slate-200 font-semibold">${req.path}</span>
+              <span class="text-xs text-slate-400 font-sans hidden sm:inline">- ${c.title}</span>
+            </div>
+            <span class="text-xs text-teal-400 font-mono">OpenAPI Specification</span>
+          </div>
+          <div class="p-4 border-t border-slate-700/60 bg-slate-900/50 space-y-3">
+            <div class="text-xs text-slate-300">${c.desc}</div>
+            <div class="text-xs font-mono bg-slate-950 p-3 rounded border border-slate-800 text-slate-300">
+              <span class="text-slate-500">// Response 200 OK Schema</span><br/>
+              ${JSON.stringify(c.mockResponses[Object.keys(c.mockResponses)[0]]?.body || {}, null, 2)}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
